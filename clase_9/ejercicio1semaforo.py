@@ -4,6 +4,7 @@ import random
 import logging
 
 energia = 0
+sem = threading.Semaphore(2)
 lock = threading.Lock()
 
 logging.basicConfig(format='%(asctime)s.%(msecs)03d [%(threadName)s] - %(message)s', datefmt='%H:%M:%S',
@@ -22,23 +23,28 @@ def generador():
 
 
 def medidor():
-    global energia
+    global energia, num_medidores
 
     while True:
+            valor0 = 0
+            valor1 = 0
+            sem.acquire()
             lock.acquire()
             try:
                 valor0 = energia
                 logging.info(f'{threading.current_thread().name} esta midiendo')
             finally:
                 lock.release()
-            time.sleep(1)
+                time.sleep(1)
             lock.acquire()
             try:
                 valor1 = energia
+                logging.info(f'La potencia generada es {valor1 - valor0} Kw')
             finally:
                 lock.release()
-            logging.info(f'La potencia generada es {valor1 - valor0} Kw')
-            time.sleep(2)
+                sem.release()
+            
+            time.sleep(random.randint(5,15))
 
 hilos = []
 
